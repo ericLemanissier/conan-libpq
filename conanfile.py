@@ -79,6 +79,8 @@ class LibpqConan(ConanFile):
                 autotools.make()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "interfaces", "libpq")):
                 autotools.make()
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "bin", "pg_config")):
+                autotools.make()
 
     def package(self):
         self.copy(pattern="COPYRIGHT", dst="licenses", src=self._source_subfolder)
@@ -90,6 +92,8 @@ class LibpqConan(ConanFile):
             with tools.chdir(os.path.join(self._source_subfolder, "src", "common")):
                 autotools.install()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "interfaces", "libpq")):
+                autotools.install()
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "bin", "pg_config")):
                 autotools.install()
             self.copy(pattern="*.h", dst=os.path.join("include", "catalog"), src=os.path.join(self._source_subfolder, "src", "include", "catalog"))
         self.copy(pattern="*.h", dst=os.path.join("include", "catalog"), src=os.path.join(self._source_subfolder, "src", "backend", "catalog"))
