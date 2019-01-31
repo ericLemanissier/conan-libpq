@@ -117,6 +117,9 @@ class LibpqConan(ConanFile):
                 pattern = "*.so*" if self.options.shared else "*.a"
             elif self.settings.os == "Macos":
                 pattern = "*.dylib" if self.options.shared else "*.a"
+            elif self.settings.os == "Windows" and self.settings.compiler == "gcc":
+                pattern = "*.a"
+                self.copy(pattern="*.dll", dst="bin", src=os.path.join(self._build_subfolder, "bin"))
             self.copy(pattern=pattern, dst="lib", src=os.path.join(self._build_subfolder, "lib"))
 
     def package_info(self):
