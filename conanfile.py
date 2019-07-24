@@ -3,6 +3,7 @@
 from conans import ConanFile, AutoToolsBuildEnvironment, CMake, tools
 from conans.errors import ConanInvalidConfiguration
 import os
+import shutil
 
 
 class LibpqConan(ConanFile):
@@ -29,10 +30,6 @@ class LibpqConan(ConanFile):
     @property
     def _source_subfolder(self):
         return "source_subfolder"
-
-    @property
-    def _build_subfolder(self):
-        return os.path.join(self.build_folder, "output")
 
     def config_options(self):
         if self.settings.os == 'Windows':
@@ -80,8 +77,12 @@ class LibpqConan(ConanFile):
         else:
             autotools = self._configure_autotools()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "common")):
+                autotools.make()                
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "include")):
                 autotools.make()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "interfaces", "libpq")):
+                autotools.make()
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "bin", "pg_config")):
                 autotools.make()
 
     def package(self):
@@ -93,21 +94,15 @@ class LibpqConan(ConanFile):
             autotools = self._configure_autotools()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "common")):
                 autotools.install()
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "include")):
+                autotools.install()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "interfaces", "libpq")):
                 autotools.install()
-            self.copy(pattern="*.h", dst="include", src=os.path.join(self._build_subfolder, "include"))
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "bin", "pg_config")):
+                autotools.install()
+            shutil.rmtree(os.path.join(self.package_folder, "include", "postgresql", "server"))
             self.copy(pattern="*.h", dst=os.path.join("include", "catalog"), src=os.path.join(self._source_subfolder, "src", "include", "catalog"))
         self.copy(pattern="*.h", dst=os.path.join("include", "catalog"), src=os.path.join(self._source_subfolder, "src", "backend", "catalog"))
-        self.copy(pattern="postgres_ext.h", dst="include", src=os.path.join(self._source_subfolder, "src", "include"))
-        self.copy(pattern="pg_config_ext.h", dst="include", src=os.path.join(self._source_subfolder, "src", "include"))
-        if self.settings.os == "Linux":
-            pattern = "*.so*" if self.options.shared else "*.a"
-        elif self.settings.os == "Macos":
-            pattern = "*.dylib" if self.options.shared else "*.a"
-        elif self.settings.os == "Windows":
-            pattern = "*.a"
-            self.copy(pattern="*.dll", dst="bin", src=os.path.join(self._build_subfolder, "bin"))
-        self.copy(pattern=pattern, dst="lib", src=os.path.join(self._build_subfolder, "lib"))
 
     def package_info(self):
         self.env_info.PostgreSQL_ROOT = self.package_folder
