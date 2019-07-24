@@ -30,10 +30,6 @@ class LibpqConan(ConanFile):
     def _source_subfolder(self):
         return "source_subfolder"
 
-    @property
-    def _build_subfolder(self):
-        return os.path.join(self.build_folder, "output")
-
     def config_options(self):
         if self.settings.os == 'Windows':
             del self.options.fPIC
@@ -95,19 +91,11 @@ class LibpqConan(ConanFile):
                 autotools.install()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "interfaces", "libpq")):
                 autotools.install()
-            self.copy(pattern="*.h", dst="include", src=os.path.join(self._build_subfolder, "include"))
             self.copy(pattern="*.h", dst=os.path.join("include", "catalog"), src=os.path.join(self._source_subfolder, "src", "include", "catalog"))
         self.copy(pattern="*.h", dst=os.path.join("include", "catalog"), src=os.path.join(self._source_subfolder, "src", "backend", "catalog"))
         self.copy(pattern="postgres_ext.h", dst="include", src=os.path.join(self._source_subfolder, "src", "include"))
         self.copy(pattern="pg_config_ext.h", dst="include", src=os.path.join(self._source_subfolder, "src", "include"))
-        if self.settings.os == "Linux":
-            pattern = "*.so*" if self.options.shared else "*.a"
-        elif self.settings.os == "Macos":
-            pattern = "*.dylib" if self.options.shared else "*.a"
-        elif self.settings.os == "Windows":
-            pattern = "*.a"
-            self.copy(pattern="*.dll", dst="bin", src=os.path.join(self._build_subfolder, "bin"))
-        self.copy(pattern=pattern, dst="lib", src=os.path.join(self._build_subfolder, "lib"))
+        self.copy(pattern="pg_config.h", dst="include", src=os.path.join(self._source_subfolder, "src", "include"))
 
     def package_info(self):
         self.env_info.PostgreSQL_ROOT = self.package_folder
