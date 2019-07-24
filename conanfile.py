@@ -3,6 +3,7 @@
 from conans import ConanFile, AutoToolsBuildEnvironment, CMake, tools
 from conans.errors import ConanInvalidConfiguration
 import os
+import shutil
 
 
 class LibpqConan(ConanFile):
@@ -76,8 +77,12 @@ class LibpqConan(ConanFile):
         else:
             autotools = self._configure_autotools()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "common")):
+                autotools.make()                
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "include")):
                 autotools.make()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "interfaces", "libpq")):
+                autotools.make()
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "bin", "pg_config")):
                 autotools.make()
 
     def package(self):
@@ -89,13 +94,15 @@ class LibpqConan(ConanFile):
             autotools = self._configure_autotools()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "common")):
                 autotools.install()
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "include")):
+                autotools.install()
             with tools.chdir(os.path.join(self._source_subfolder, "src", "interfaces", "libpq")):
                 autotools.install()
+            with tools.chdir(os.path.join(self._source_subfolder, "src", "bin", "pg_config")):
+                autotools.install()
+            shutil.rmtree(os.path.join(self.package_folder, "include", "postgresql", "server"))
             self.copy(pattern="*.h", dst=os.path.join("include", "catalog"), src=os.path.join(self._source_subfolder, "src", "include", "catalog"))
         self.copy(pattern="*.h", dst=os.path.join("include", "catalog"), src=os.path.join(self._source_subfolder, "src", "backend", "catalog"))
-        self.copy(pattern="postgres_ext.h", dst="include", src=os.path.join(self._source_subfolder, "src", "include"))
-        self.copy(pattern="pg_config_ext.h", dst="include", src=os.path.join(self._source_subfolder, "src", "include"))
-        self.copy(pattern="pg_config.h", dst="include", src=os.path.join(self._source_subfolder, "src", "include"))
 
     def package_info(self):
         self.env_info.PostgreSQL_ROOT = self.package_folder
