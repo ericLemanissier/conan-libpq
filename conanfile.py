@@ -22,7 +22,7 @@ class LibpqConan(ConanFile):
         "fPIC": [True, False],
         "with_zlib": [True, False],
         "with_openssl": [True, False]}
-    default_options = {'shared': False, 'fPIC': True, 'with_zlib': False, 'with_openssl': False}
+    default_options = {'shared': False, 'fPIC': True, 'with_zlib': True, 'with_openssl': True}
     generators = "cmake"
     _autotools = None
 
@@ -43,7 +43,7 @@ class LibpqConan(ConanFile):
         if self.options.with_zlib:
             self.requires.add("zlib/1.2.11@conan/stable")
         if self.options.with_openssl:
-            self.requires.add("OpenSSL/1.0.2s@conan/stable")
+            self.requires.add("OpenSSL/1.1.1c@conan/stable")
 
     def source(self):
         source_url = "https://ftp.postgresql.org/pub/source"
@@ -59,7 +59,11 @@ class LibpqConan(ConanFile):
             args.append('--with-zlib' if self.options.with_zlib else '--without-zlib')
             args.append('--with-openssl' if self.options.with_openssl else '--without-openssl')
             with tools.chdir(self._source_subfolder):
-                self._autotools.configure(args=args)
+                try:
+                    self._autotools.configure(args=args)
+                except:
+                    self.output.info(open('config.log', errors='backslashreplace').read())                    
+                    raise
         return self._autotools
 
     def _configure_cmake(self):
